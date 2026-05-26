@@ -2,7 +2,7 @@ import librosa
 import numpy as np
 from pathlib import Path
 
-#CREATE MEL_SPEC
+#CREATE LOG-MEL_SPEC
 def create_spectrogram(audio,sr,n_mels=128):
     mel_spec=librosa.feature.melspectrogram(
         y=audio,
@@ -24,11 +24,10 @@ def save_spectrogram(spec,save_path):
         parents=True,
         exist_ok=True
     )
-    save_path=save_path.with_suffix(".npy")
     np.save(save_path,spec.astype(np.float32))
 
 #PIPELINE
-def spectogram_pipeline(audio,save_path,sr=32000):
+def spectrogram_pipeline(audio,save_path,sr=32000):
     log_mel_spec=create_spectrogram(audio,sr)
     save_spectrogram(log_mel_spec,save_path)
     return log_mel_spec

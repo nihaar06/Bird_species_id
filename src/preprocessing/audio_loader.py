@@ -17,7 +17,7 @@ def normalize_audio(audio):
 #REMOVE SILENCE 
 # -since we are trimming the audio to 5 seconds, removing silence can help to ensure that we are capturing the relevant audio content
 #  and not just silence, which can improve the quality of the spectrograms and the performance of the model.
-def remove_silence(audio,top_db=20):
+def remove_silence(audio,top_db=30):
     audio,_=librosa.effects.trim(audio,top_db=top_db)
     return audio
 
