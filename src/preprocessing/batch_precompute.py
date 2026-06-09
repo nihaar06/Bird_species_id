@@ -12,13 +12,17 @@ def batch_preprocess():
         species_name=species_folder.name
         print(f"\nProcessing {species_name}...")
         for specie_audio in species_folder.glob("*.ogg"):
-            output_folder=PROCESSED/species_name
-            output_file=output_folder/f"{specie_audio.stem}.npy"
+            output_folder = PROCESSED / species_name
+            output_file = output_folder / f"{specie_audio.stem}.npy"
             if output_file.exists():
                 continue
-            audio,sr=load_audio_pipeline(specie_audio)
-            spectrogram_pipeline(audio,output_file,sr)
-            print(f"Saved:{output_file.name}")
+                
+            try:
+                audio, sr = load_audio_pipeline(specie_audio)
+                spectrogram_pipeline(audio, output_file, sr)
+                print(f"Saved: {output_file.name}")
+            except Exception as e:
+                print(f"❌ Error skipping {specie_audio.name}: {str(e)}")
     print("Done!")
 
 batch_preprocess()

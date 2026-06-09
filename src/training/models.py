@@ -1,12 +1,17 @@
-from torch.utils.data import DataLoader
-from dataset.bird_dataset import BirdDataset
-from tensorflow.keras.layers import Flatten,Dense,Conv2D,MaxPooling2D
+from tensorflow.keras.layers import MaxPooling2D,Conv2D,Flatten,Dense,Dropout
 from tensorflow.keras.models import Sequential
 
-dataset=BirdDataset("dataset/processed/logmel_128")
-dataloader=DataLoader(
-    dataset,
-    batch_size=32,
-    shuffle=True,
-    num_workers=4
-)
+def model_cnn(num_classes):
+    CNN=Sequential([
+        Conv2D(16,(3,3),activation='relu',input_shape=(128,313,1)),
+        MaxPooling2D(2,2),
+        Conv2D(32,(3,3),activation='relu'),
+        MaxPooling2D(2,2),
+        Conv2D(64,(3,3),activation='relu'),
+        MaxPooling2D(2,2),
+        Flatten(),
+        Dense(128,activation='relu'),
+        Dropout(0.3),
+        Dense(num_classes,activation='softmax')
+    ])
+    return CNN
