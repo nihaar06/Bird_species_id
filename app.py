@@ -72,7 +72,7 @@ st.markdown("""
 @st.cache_resource
 def load_application_assets():
     # 1. Parse your attached label map configuration file
-    with open("src/preprocessing/bird_class_map.json", "r") as f:
+    with open("src/model/bird_class_map.json", "r") as f:
         label_map = json.load(f)
         
     # Invert to map neural output indices back to actual string species names
@@ -89,7 +89,7 @@ def load_application_assets():
     model = Model(inputs=base_model.input, outputs=predictions)
     
     # 3. Pull weights out of your lightweight checkpoint binary
-    model.load_weights("src/preprocessing/bird_efficientnet_weights.weights.h5")
+    model.load_weights("src/model/bird_efficientnet_weights.weights.h5")
     
     return model, index_to_species
 
