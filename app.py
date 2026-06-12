@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import numpy as np
 import json
 import os
@@ -26,7 +25,19 @@ st.set_page_config(
 
 
 # ════════════════════════════════════════════════════════════════
-# GLOBAL CSS  — only class-based rules, NO inline style= stripped
+# DESIGN SYSTEM — Field Notebook / Specimen Ledger
+#
+#   Background   #0a0e0f   near-black, slightly green-grey
+#   Panel        #11161a   card surfaces
+#   Hairline     #232b2c   borders, dividers
+#   Paper text   #e8e6e1   primary text (warm off-white)
+#   Muted text   #8d978f   secondary text
+#   Sage         #7a9b8e   primary accent (foliage)
+#   Amber        #c9a876   secondary accent (specimen tag / rank)
+#
+#   Display face : "Source Serif 4"  — specimen card titles
+#   Mono face    : "JetBrains Mono"  — codes, metrics, ledger rows
+#   Body face    : system sans
 # ════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
@@ -50,14 +61,17 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 .block-container {
-    padding: 2.2rem 3rem 3rem 3rem;
+    padding: 3rem 3rem 3rem 3rem;
     max-width: 1180px;
 }
 ::selection { background: var(--sage-dim); }
 
-/* HEADER */
+/* ---------------------------------------------------------- */
+/* HEADER / MASTHEAD                                            */
+/* ---------------------------------------------------------- */
 .masthead {
     border-bottom: 1px solid var(--hairline);
+    padding-top: 0.8rem;
     padding-bottom: 1.6rem;
     margin-bottom: 2.2rem;
     animation: fadeIn 0.5s ease-out;
@@ -98,12 +112,6 @@ html, body, [class*="css"] {
     font-weight: 600;
     color: var(--sage);
 }
-.stat-value-amber {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--amber);
-}
 .stat-label {
     font-size: 0.7rem;
     letter-spacing: 0.1em;
@@ -111,7 +119,9 @@ html, body, [class*="css"] {
     color: var(--muted);
 }
 
-/* SECTION LABELS */
+/* ---------------------------------------------------------- */
+/* SECTION LABELS                                               */
+/* ---------------------------------------------------------- */
 .section-eyebrow {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7rem;
@@ -130,7 +140,9 @@ html, body, [class*="css"] {
     background: var(--hairline);
 }
 
-/* UPLOAD PANEL */
+/* ---------------------------------------------------------- */
+/* UPLOAD PANEL                                                 */
+/* ---------------------------------------------------------- */
 .upload-shell {
     border: 1px dashed var(--hairline);
     border-radius: 10px;
@@ -153,7 +165,9 @@ div[data-testid="stFileUploaderDropzone"] {
     border: none !important;
 }
 
-/* GENERIC PANEL */
+/* ---------------------------------------------------------- */
+/* GENERIC PANEL                                                */
+/* ---------------------------------------------------------- */
 .panel {
     background: var(--panel);
     border: 1px solid var(--hairline);
@@ -163,7 +177,169 @@ div[data-testid="stFileUploaderDropzone"] {
     animation: fadeUp 0.4s ease-out both;
 }
 
-/* EMPTY STATE */
+/* ---------------------------------------------------------- */
+/* SPECIMEN CARD — primary prediction                           */
+/* ---------------------------------------------------------- */
+.specimen-card {
+    background: linear-gradient(165deg, var(--panel) 0%, var(--panel-alt) 100%);
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--sage);
+    border-radius: 10px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.1rem;
+    animation: fadeUp 0.45s ease-out both;
+}
+.specimen-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    border-radius: 99px;
+    padding: 0.18rem 0.65rem;
+    margin-bottom: 0.9rem;
+}
+.specimen-name {
+    font-family: 'Source Serif 4', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--paper);
+    line-height: 1.15;
+    margin-bottom: 0.2rem;
+}
+.specimen-scientific {
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--muted);
+    margin-bottom: 1.1rem;
+}
+.specimen-meta {
+    display: flex;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+}
+.meta-item .meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+}
+.meta-item .meta-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.05rem;
+    color: var(--paper);
+    font-weight: 500;
+}
+
+/* confidence tick-ruler */
+.ruler-wrap { margin-top: 0.4rem; }
+.ruler-track {
+    position: relative;
+    height: 6px;
+    background: var(--hairline);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.ruler-fill {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--sage-dim), var(--sage));
+    border-radius: 3px;
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ruler-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.35rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+}
+
+/* status chip */
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.7rem;
+    border-radius: 99px;
+    border: 1px solid currentColor;
+}
+.status-high   { color: var(--sage); }
+.status-medium { color: var(--amber); }
+.status-low    { color: #c97a6a; }
+.status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+}
+
+/* ---------------------------------------------------------- */
+/* LEDGER (Top-5)                                               */
+/* ---------------------------------------------------------- */
+.ledger-row {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr 4.5rem;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--hairline);
+}
+.ledger-row:last-child { border-bottom: none; }
+.ledger-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+.ledger-rank.r1 { color: var(--sage); font-weight: 600; }
+.ledger-main .ledger-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--paper);
+    margin-bottom: 0.35rem;
+}
+.ledger-main .ledger-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-left: 0.4rem;
+}
+.ledger-bar-track {
+    height: 4px;
+    background: var(--hairline);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.ledger-bar-fill {
+    height: 100%;
+    background: var(--sage-dim);
+    border-radius: 2px;
+}
+.ledger-row.r1 .ledger-bar-fill { background: var(--sage); }
+.ledger-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--paper);
+    text-align: right;
+    font-weight: 500;
+}
+.ledger-row.r1 .ledger-pct { color: var(--sage); }
+
+/* ---------------------------------------------------------- */
+/* EMPTY STATE                                                  */
+/* ---------------------------------------------------------- */
 .empty-state {
     text-align: center;
     padding: 3.2rem 1rem;
@@ -177,7 +353,9 @@ div[data-testid="stFileUploaderDropzone"] {
     opacity: 0.6;
 }
 
-/* AUDIO PLAYER WRAP */
+/* ---------------------------------------------------------- */
+/* AUDIO PLAYER WRAP                                            */
+/* ---------------------------------------------------------- */
 .audio-meta {
     display: flex;
     justify-content: space-between;
@@ -189,7 +367,9 @@ div[data-testid="stFileUploaderDropzone"] {
 }
 .stAudio audio { width: 100%; }
 
-/* FOOTER */
+/* ---------------------------------------------------------- */
+/* TOGGLE / FOOTER                                              */
+/* ---------------------------------------------------------- */
 .footer-note {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7rem;
@@ -200,7 +380,9 @@ div[data-testid="stFileUploaderDropzone"] {
     border-top: 1px solid var(--hairline);
 }
 
-/* ANIMATIONS */
+/* ---------------------------------------------------------- */
+/* ANIMATIONS                                                   */
+/* ---------------------------------------------------------- */
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
@@ -208,7 +390,7 @@ div[data-testid="stFileUploaderDropzone"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .panel, .masthead { animation: none !important; transition: none !important; }
+    .specimen-card, .panel, .masthead, .ruler-fill { animation: none !important; transition: none !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -248,7 +430,7 @@ model, index_to_species = load_application_assets()
 
 
 # ════════════════════════════════════════════════════════════════
-# PREPROCESSING
+# PREPROCESSING (unchanged from validated pipeline)
 # ════════════════════════════════════════════════════════════════
 def spec_to_tensor(spec):
     min_val, max_val = spec.min(), spec.max()
@@ -302,227 +484,20 @@ def predict_multi_window(model, tensors):
     return np.mean(preds, axis=0)
 
 
+# ════════════════════════════════════════════════════════════════
+# HELPERS — confidence status
+# ════════════════════════════════════════════════════════════════
 def confidence_status(pct):
     if pct >= 60:
-        return "sage", "Strong Match"
+        return "status-high", "Strong match"
     elif pct >= 30:
-        return "amber", "Probable Match"
+        return "status-medium", "Probable match"
     else:
-        return "red", "Weak Signal"
+        return "status-low", "Weak signal"
 
 
 # ════════════════════════════════════════════════════════════════
-# HTML RENDER HELPERS  — all use components.html() to bypass
-# Streamlit's bleach sanitizer which strips style= attributes
-# ════════════════════════════════════════════════════════════════
-
-COMPONENT_FONTS = """
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: transparent; font-family: 'Inter', sans-serif; color: #e8e6e1; }
-</style>
-"""
-
-
-def render_specimen_card(info, confidence, window_note, status_color, status_label):
-    """Primary prediction card rendered via components.html to preserve style= attrs."""
-    conf_pct = min(confidence, 100)
-
-    status_colors = {
-        "sage":  {"bg": "rgba(122,155,142,0.12)", "border": "#7a9b8e", "text": "#7a9b8e"},
-        "amber": {"bg": "rgba(201,168,118,0.12)", "border": "#c9a876", "text": "#c9a876"},
-        "red":   {"bg": "rgba(201,122,106,0.12)", "border": "#c97a6a", "text": "#c97a6a"},
-    }
-    sc = status_colors.get(status_color, status_colors["sage"])
-
-    html = COMPONENT_FONTS + f"""
-    <div style="
-        background: linear-gradient(165deg, #11161a 0%, #14191d 100%);
-        border: 1px solid #232b2c;
-        border-left: 3px solid #7a9b8e;
-        border-radius: 10px;
-        padding: 1.8rem 2rem;
-        font-family: 'Inter', sans-serif;
-    ">
-        <!-- Tag -->
-        <div style="
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
-            color: #c9a876; border: 1px solid #c9a876;
-            border-radius: 99px; padding: 0.18rem 0.65rem; margin-bottom: 0.9rem;
-        ">Rank 1 &nbsp;·&nbsp; {window_note}</div>
-
-        <!-- Species name -->
-        <div style="
-            font-family: 'Source Serif 4', serif;
-            font-size: 2rem; font-weight: 700;
-            color: #e8e6e1; line-height: 1.15; margin-bottom: 0.2rem;
-        ">{info['common']}</div>
-
-        <!-- Scientific name -->
-        <div style="
-            font-family: 'Source Serif 4', serif;
-            font-style: italic; font-size: 1.05rem;
-            color: #8d978f; margin-bottom: 1.1rem;
-        ">{info['scientific']}</div>
-
-        <!-- Meta row -->
-        <div style="display: flex; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 1.2rem;">
-            <div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:0.68rem;
-                            letter-spacing:0.12em; text-transform:uppercase;
-                            color:#8d978f; margin-bottom:0.25rem;">BirdCLEF Code</div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:1.05rem;
-                            color:#e8e6e1; font-weight:500;">{info['code']}</div>
-            </div>
-            <div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:0.68rem;
-                            letter-spacing:0.12em; text-transform:uppercase;
-                            color:#8d978f; margin-bottom:0.25rem;">Confidence</div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:1.05rem;
-                            color:#e8e6e1; font-weight:500;">{confidence:.1f}%</div>
-            </div>
-            <div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:0.68rem;
-                            letter-spacing:0.12em; text-transform:uppercase;
-                            color:#8d978f; margin-bottom:0.25rem;">Status</div>
-                <div style="
-                    display:inline-flex; align-items:center; gap:0.4rem;
-                    font-family:'JetBrains Mono',monospace; font-size:0.72rem;
-                    letter-spacing:0.08em; text-transform:uppercase;
-                    padding:0.25rem 0.7rem; border-radius:99px;
-                    border: 1px solid {sc['border']};
-                    color: {sc['text']};
-                    background: {sc['bg']};
-                ">
-                    <span style="width:6px;height:6px;border-radius:50%;
-                                 background:{sc['border']};display:inline-block;"></span>
-                    {status_label}
-                </div>
-            </div>
-        </div>
-
-        <!-- Confidence ruler -->
-        <div style="margin-top:0.4rem;">
-            <div style="position:relative; height:6px; background:#232b2c;
-                        border-radius:3px; overflow:hidden;">
-                <div style="position:absolute; top:0; left:0; bottom:0;
-                             width:{conf_pct:.1f}%;
-                             background: linear-gradient(90deg, #4f6760, #7a9b8e);
-                             border-radius:3px;"></div>
-            </div>
-            <div style="display:flex; justify-content:space-between;
-                        margin-top:0.35rem; font-family:'JetBrains Mono',monospace;
-                        font-size:0.62rem; color:#8d978f; letter-spacing:0.05em;">
-                <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
-            </div>
-        </div>
-    </div>
-    """
-    components.html(html, height=310, scrolling=False)
-
-
-def render_ledger(top5_idx, raw_predictions, index_to_species):
-    """Top-5 ranked candidates rendered via components.html."""
-
-    rows_html = ""
-    for rank, idx in enumerate(top5_idx, start=1):
-        pct = float(raw_predictions[idx]) * 100
-        sp = get_species_info(index_to_species[int(idx)])
-        is_top = rank == 1
-
-        rank_color  = "#7a9b8e" if is_top else "#8d978f"
-        rank_weight = "600"     if is_top else "400"
-        pct_color   = "#7a9b8e" if is_top else "#e8e6e1"
-        bar_color   = "#7a9b8e" if is_top else "#4f6760"
-        border_top  = "none"    if rank == 1 else "1px solid #232b2c"
-
-        rows_html += f"""
-        <div style="display:grid; grid-template-columns:2.8rem 1fr 4.8rem;
-                    align-items:center; gap:1rem; padding:0.8rem 0;
-                    border-top:{border_top};">
-            <div style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;
-                        color:{rank_color}; font-weight:{rank_weight};">{rank:02d}</div>
-            <div>
-                <div style="font-size:0.95rem; font-weight:500; color:#e8e6e1;
-                            margin-bottom:0.35rem; font-family:'Inter',sans-serif;">
-                    {sp['common']}
-                    <span style="font-family:'JetBrains Mono',monospace;
-                                 font-size:0.68rem; color:#8d978f;
-                                 margin-left:0.45rem;">{sp['code']}</span>
-                </div>
-                <div style="height:4px; background:#232b2c;
-                            border-radius:2px; overflow:hidden;">
-                    <div style="height:100%; width:{min(pct,100):.1f}%;
-                                background:{bar_color}; border-radius:2px;"></div>
-                </div>
-            </div>
-            <div style="font-family:'JetBrains Mono',monospace; font-size:0.9rem;
-                        color:{pct_color}; text-align:right;
-                        font-weight:500;">{pct:.1f}%</div>
-        </div>
-        """
-
-    html = COMPONENT_FONTS + f"""
-    <div style="background:#11161a; border:1px solid #232b2c;
-                border-radius:10px; padding:0.4rem 1.6rem 0.5rem 1.6rem;">
-        {rows_html}
-    </div>
-    """
-    components.html(html, height=310, scrolling=False)
-
-
-def render_low_confidence_warning():
-    html = COMPONENT_FONTS + """
-    <div style="background:#11161a; border:1px solid #232b2c;
-                border-left:3px solid #c97a6a; border-radius:10px;
-                padding:1rem 1.4rem;">
-        <span style="color:#c97a6a; font-family:'JetBrains Mono',monospace;
-                     font-size:0.8rem;">
-            ⚠ Low confidence — recording may contain overlapping calls,
-            background noise, or no clear vocalization.
-        </span>
-    </div>
-    """
-    components.html(html, height=70, scrolling=False)
-
-
-def render_error(msg):
-    safe = str(msg).replace("<", "&lt;").replace(">", "&gt;")
-    html = COMPONENT_FONTS + f"""
-    <div style="background:#11161a; border:1px solid #232b2c;
-                border-left:3px solid #c97a6a; border-radius:10px;
-                padding:1.4rem 1.6rem;">
-        <div style="font-family:'JetBrains Mono',monospace; font-size:0.7rem;
-                    letter-spacing:0.18em; text-transform:uppercase;
-                    color:#8d978f; margin-bottom:0.4rem;">Processing Error</div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:0.8rem;
-                     color:#c97a6a;">{safe}</span>
-    </div>
-    """
-    components.html(html, height=110, scrolling=False)
-
-
-def render_empty_state():
-    html = COMPONENT_FONTS + """
-    <div style="background:#11161a; border:1px solid #232b2c;
-                border-radius:10px; padding:1.4rem 1.6rem;">
-        <div style="text-align:center; padding:3.2rem 1rem;
-                    color:#8d978f; font-size:0.9rem; line-height:1.6;">
-            <div style="font-size:1.8rem; margin-bottom:0.8rem; opacity:0.6;">🪶</div>
-            No recording loaded.<br>
-            Upload an audio file to run identification.
-        </div>
-    </div>
-    """
-    components.html(html, height=210, scrolling=False)
-
-
-# ════════════════════════════════════════════════════════════════
-# MASTHEAD  — only class-based CSS, safe for st.markdown
+# MASTHEAD
 # ════════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="masthead">
@@ -548,7 +523,7 @@ st.markdown("""
             <span class="stat-label">Spectrogram Bins</span>
         </div>
         <div class="stat-block">
-            <span class="stat-value-amber">EfficientNetB0</span>
+            <span class="stat-value">EfficientNetB0</span>
             <span class="stat-label">Model Backbone</span>
         </div>
     </div>
@@ -598,7 +573,15 @@ with right:
     st.markdown('<div class="section-eyebrow">Identification Result</div>', unsafe_allow_html=True)
 
     if audio_file is None:
-        render_empty_state()
+        st.markdown("""
+        <div class="panel">
+            <div class="empty-state">
+                <div class="empty-icon">🪶</div>
+                No recording loaded.<br>
+                Upload an audio file to run identification.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
         with st.spinner("Analyzing waveform and extracting acoustic features…"):
             try:
@@ -618,34 +601,92 @@ with right:
                 top_idx = int(np.argmax(raw_predictions))
                 confidence = float(raw_predictions[top_idx]) * 100
                 info = get_species_info(index_to_species[top_idx])
-                status_color, status_label = confidence_status(confidence)
 
-                # ── Specimen card (components.html — style= attrs safe) ──
-                render_specimen_card(info, confidence, window_note, status_color, status_label)
+                status_class, status_label = confidence_status(confidence)
+
+                # ── Specimen card ─────────────────────────────
+                st.markdown(f"""
+                <div class="specimen-card">
+                    <div class="specimen-tag">Rank 1 · {window_note}</div>
+                    <div class="specimen-name">{info['common']}</div>
+                    <div class="specimen-scientific">{info['scientific']}</div>
+                    <div class="specimen-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">BirdCLEF Code</div>
+                            <div class="meta-value">{info['code']}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Confidence</div>
+                            <div class="meta-value">{confidence:.1f}%</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Status</div>
+                            <div class="meta-value">
+                                <span class="status-chip {status_class}">
+                                    <span class="status-dot"></span>{status_label}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ruler-wrap">
+                        <div class="ruler-track">
+                            <div class="ruler-fill" style="width:{min(confidence,100):.1f}%"></div>
+                        </div>
+                        <div class="ruler-ticks">
+                            <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
                 if confidence < 20:
-                    render_low_confidence_warning()
+                    st.markdown("""
+                    <div class="panel" style="border-left:3px solid #c97a6a;">
+                        <span style="color:#c97a6a; font-family:'JetBrains Mono',monospace; font-size:0.8rem;">
+                            ⚠ Low confidence — recording may contain overlapping calls,
+                            background noise, or no clear vocalization.
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                # ── Top-5 ledger ─────────────────────────────────────────
+                # ── Top-5 ledger ──────────────────────────────
                 st.markdown('<div class="section-eyebrow" style="margin-top:1.4rem">Ranked Candidates</div>', unsafe_allow_html=True)
-                top5_idx = np.argsort(raw_predictions)[::-1][:5]
-                render_ledger(top5_idx, raw_predictions, index_to_species)
 
-                # ── Probability chart ────────────────────────────────────
+                top5_idx = np.argsort(raw_predictions)[::-1][:5]
+                rows_html = '<div class="panel">'
+                for rank, idx in enumerate(top5_idx, start=1):
+                    pct = float(raw_predictions[idx]) * 100
+                    sp = get_species_info(index_to_species[int(idx)])
+                    rank_class = "r1" if rank == 1 else ""
+                    rows_html += f"""
+                    <div class="ledger-row {rank_class}">
+                        <div class="ledger-rank {rank_class}">{rank:02d}</div>
+                        <div class="ledger-main">
+                            <div class="ledger-name">{sp['common']}<span class="ledger-code">{sp['code']}</span></div>
+                            <div class="ledger-bar-track">
+                                <div class="ledger-bar-fill" style="width:{min(pct,100):.1f}%"></div>
+                            </div>
+                        </div>
+                        <div class="ledger-pct">{pct:.1f}%</div>
+                    </div>
+                    """
+                rows_html += '</div>'
+                st.markdown(rows_html, unsafe_allow_html=True)
+
+                # ── Probability chart ─────────────────────────
                 st.markdown('<div class="section-eyebrow" style="margin-top:1.4rem">Probability Distribution</div>', unsafe_allow_html=True)
 
                 top5_names = [common_name(index_to_species[int(i)]) for i in top5_idx]
-                top5_pcts  = [float(raw_predictions[i]) * 100 for i in top5_idx]
-
-                # Rank 1 is bottom of horizontal bar chart (reversed list),
-                # so colours reversed too: index 0 = rank 5 (dim), index 4 = rank 1 (bright)
-                bar_colors = ["#2e3d3c", "#3d5250", "#4f6760", "#618278", "#7a9b8e"]
+                top5_pcts = [float(raw_predictions[i]) * 100 for i in top5_idx]
 
                 fig = go.Figure(go.Bar(
                     x=top5_pcts[::-1],
                     y=top5_names[::-1],
                     orientation='h',
-                    marker=dict(color=bar_colors, line=dict(width=0)),
+                    marker=dict(
+                        color=["#4f6760"] * 4 + ["#7a9b8e"],
+                        line=dict(width=0),
+                    ),
                     hovertemplate='%{y}<br><b>%{x:.2f}%</b><extra></extra>',
                 ))
                 fig.update_layout(
@@ -666,7 +707,14 @@ with right:
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
             except Exception as e:
-                render_error(e)
+                st.markdown(f"""
+                <div class="panel" style="border-left:3px solid #c97a6a;">
+                    <div class="section-eyebrow" style="margin-bottom:0.4rem;">Processing Error</div>
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--muted);">
+                        {str(e)}
+                    </span>
+                </div>
+                """, unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════════
