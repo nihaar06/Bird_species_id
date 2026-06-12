@@ -812,7 +812,8 @@ python test_for_improvs/check_str_vs_raw_pipeline.py
 
 ## 📸 Screenshots
 
-![working_ss](image.png)
+<img width="1920" height="904" alt="chrome_TpBpvHYvJ8" src="https://github.com/user-attachments/assets/6fe8e58e-4a62-4305-9797-453db9a30789" />
+
 **Application header with model statistics:**
 ```
 Acoustic Specimen Index
