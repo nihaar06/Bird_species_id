@@ -1,4 +1,4 @@
-# 🪶 Acoustic Specimen Index
+#  Acoustic Specimen Index
 
 > **A deep learning bird species identification system that classifies bird vocalizations from field recordings using audio spectrograms and EfficientNetB0 transfer learning.**
 
