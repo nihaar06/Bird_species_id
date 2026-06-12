@@ -812,8 +812,7 @@ python test_for_improvs/check_str_vs_raw_pipeline.py
 
 ## 📸 Screenshots
 
-> _Upload a field recording and the Acoustic Specimen Index identifies the species in seconds._
-
+![working_ss](image.png)
 **Application header with model statistics:**
 ```
 Acoustic Specimen Index
